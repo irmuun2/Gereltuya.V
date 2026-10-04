@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Баатрын зан чанар</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --kraft:#c9a56c; --kraft-d:#a8824a; --manila:#f3e3b8; --manila-d:#e2cc92; --paper:#fbf5e4;
+  --ink:#2a1a0e; --muted:#6a5137; --line:#d9c497;
+  --red:#b3261e; --red-d:#861a14; --red-soft:#f7dcd6;
+  --grn:#2e7d32; --grn-d:#1f5c23; --grn-soft:#e0efd3;
+  --noir:#241811; --noir-2:#3a281b; --gold:#e5b54e;
+  --cork:#b98c55;
+  --shadow:0 10px 24px rgba(42,26,14,.30);
+  --mono:"Ubuntu Mono","Consolas",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{color:var(--ink);font-family:"Ubuntu","Segoe UI",system-ui,sans-serif;font-size:20px;line-height:1.4;overflow:hidden;background-color:var(--kraft);
+  background-image:radial-gradient(rgba(255,255,255,.10) 1px,transparent 1.5px),radial-gradient(rgba(60,35,10,.10) 1px,transparent 1.5px),linear-gradient(160deg,#cfac74 0%,#c09a5f 55%,#b78f55 100%);
+  background-size:7px 7px,11px 11px,100% 100%;background-position:0 0,3px 5px,0 0}
+button{font:inherit;cursor:pointer;color:inherit}
+textarea,input{font:inherit;color:var(--ink)}
+
+/* ===== Header ===== */
+.top{position:fixed;inset:0 0 auto 0;height:60px;display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;z-index:20;background:var(--noir);color:var(--paper);border-bottom:3px solid var(--red)}
+.tb{display:flex;align-items:center;gap:10px;padding:0 14px;border-right:1px dashed rgba(251,245,228,.25)}
+.tb:last-child{border-right:none;border-left:1px dashed rgba(251,245,228,.25)}
+.tb .lbl{font-family:var(--mono);font-size:12px;letter-spacing:1.5px;color:var(--gold);display:block;text-transform:uppercase}
+.tb .val{font-weight:700;font-size:19px;white-space:nowrap}
+.tb.mid{min-width:0;overflow:hidden}
+.tb.mid .val{overflow:hidden;text-overflow:ellipsis;display:block}
+.tasks{display:flex;gap:5px}
+.tasks span{font-family:var(--mono);font-size:13px;font-weight:700;padding:2px 7px;border:1px solid rgba(251,245,228,.35);border-radius:3px;color:#cdbb98;white-space:nowrap}
+.tasks span.on{background:var(--red);color:#fff;border-color:var(--red)}
+.timer{font-family:var(--mono);font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--gold);cursor:default}
+.timer.warn{color:#ff9b54}.timer.over{color:#ff7b74}
+.tbtn{border:1px solid rgba(251,245,228,.4);background:transparent;border-radius:3px;padding:3px 10px;font-weight:700;font-size:15px;color:var(--paper)}
+.tbtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ===== Slides ===== */
+.deck{position:absolute;inset:70px 0 70px 0;z-index:1}
+.slide{position:absolute;inset:0;overflow:auto;padding:6px clamp(16px,3.5vw,48px) 16px;opacity:0;visibility:hidden;transform:translateY(16px);transition:opacity .35s,transform .35s,visibility .35s}
+.slide.active{opacity:1;visibility:visible;transform:none}
+.inner{max-width:1280px;margin:0 auto}
+h2{font-weight:700;font-size:clamp(26px,2.7vw,36px);margin:0 0 8px;display:flex;align-items:center;gap:12px;color:var(--noir);line-height:1.15}
+h3{font-size:21px;margin:0 0 8px;font-weight:700}
+.tag{display:inline-block;font-family:var(--mono);font-weight:700;letter-spacing:2px;font-size:15px;color:var(--paper);background:var(--noir);padding:2px 12px;margin-bottom:6px;text-transform:uppercase}
+.tag b{color:var(--gold)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+
+/* manila folder card */
+.folder{background:var(--manila);border:1px solid var(--manila-d);box-shadow:var(--shadow);padding:16px 18px;position:relative;border-radius:2px 8px 8px 8px}
+.folder.tabbed{margin-top:22px}
+.folder.tabbed::before{content:attr(data-tab);position:absolute;top:-24px;left:-1px;height:24px;padding:2px 16px 0;background:var(--manila);border:1px solid var(--manila-d);border-bottom:none;border-radius:8px 8px 0 0;font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:1.5px;color:var(--muted)}
+.paper{background:var(--paper);box-shadow:var(--shadow);padding:16px 20px;position:relative;border:1px solid #eadfc2;
+  background-image:repeating-linear-gradient(transparent 0 31px,rgba(120,90,50,.13) 31px 32px)}
+.typed{font-family:var(--mono);font-size:20px;line-height:1.55}
+.stamp{display:inline-block;font-family:var(--mono);font-weight:700;color:var(--red);border:4px double var(--red);padding:2px 14px;letter-spacing:3px;text-transform:uppercase;transform:rotate(-8deg);opacity:.88;background:rgba(255,255,255,.12)}
+.pin{position:absolute;top:-10px;left:50%;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff6b62,#9d1d16);box-shadow:0 2px 3px rgba(0,0,0,.4)}
+
+.btn{border:none;border-radius:3px;padding:9px 16px;font-weight:700;background:var(--noir);color:var(--paper);box-shadow:0 4px 0 #000;transition:transform .1s,filter .15s}
+.btn:hover{filter:brightness(1.25)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #000}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn.red{background:var(--red);box-shadow:0 4px 0 var(--red-d)}
+.btn.grn{background:var(--grn);box-shadow:0 4px 0 var(--grn-d)}
+.btn.ghost{background:var(--paper);color:var(--ink);border:2px solid var(--line);box-shadow:none}
+.btn.ghost.on{border-color:var(--noir);background:var(--manila)}
+.btn.sm{padding:6px 12px;font-size:16px}
+.fb{font-size:19px;font-weight:700;min-height:27px;margin-top:6px}
+.fb.ok{color:var(--grn-d)}.fb.no{color:var(--red)}
+.def{padding:8px 12px;margin:6px 0;background:var(--paper);border-left:6px solid var(--noir);font-size:18px}
+.def.r{border-color:var(--red)}.def.g{border-color:var(--grn);background:var(--grn-soft)}
+.src{display:inline-block;font-family:var(--mono);font-weight:700;font-size:16px;background:var(--paper);border:2px dashed var(--muted);padding:2px 10px;border-radius:3px}
+.hide{display:none!important}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.shake{animation:shake .4s}
+@keyframes thump{0%{transform:scale(2.2) rotate(-14deg);opacity:0}70%{transform:scale(.95) rotate(-8deg);opacity:.95}100%{transform:scale(1) rotate(-8deg);opacity:.88}}
+
+/* ===== Nav ===== */
+.nav{position:fixed;inset:auto 0 0 0;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:20;gap:10px;background:var(--noir);border-top:3px solid var(--red)}
+.nav .btn{background:var(--manila);color:var(--noir);box-shadow:0 4px 0 #000}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dot{min-width:42px;height:32px;border:1px solid rgba(251,245,228,.4);border-radius:3px 8px 0 0;background:transparent;color:#cdbb98;font-family:var(--mono);font-weight:700;font-size:15px;transition:.2s}
+.dot.on{background:var(--manila);color:var(--noir);border-color:var(--manila)}
+.dot.done{background:rgba(229,181,78,.22);color:var(--paper)}
+.tnotes{position:fixed;right:16px;bottom:74px;width:min(440px,calc(100vw - 32px));max-height:calc(100vh - 160px);overflow:auto;background:var(--paper);border:2px solid var(--noir);border-top:10px solid var(--red);border-radius:3px;padding:12px 16px;font-size:16px;box-shadow:var(--shadow);z-index:25;display:none}
+.tnotes.show{display:block}
+.tnotes h4{margin:0 0 6px;font-size:17px;font-family:var(--mono)}
+.tnotes ul{margin:0;padding-left:20px}.tnotes li{margin:3px 0}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+
+/* ===== 1. Cover ===== */
+.cover-wrap{min-height:calc(100vh - 170px);display:flex;align-items:center;justify-content:center}
+.cover{position:relative;width:min(1000px,100%);background:var(--manila);border:1px solid var(--manila-d);border-radius:4px 14px 14px 14px;box-shadow:0 22px 50px rgba(36,24,17,.45);padding:34px 40px 26px;margin-top:30px;
+  background-image:linear-gradient(90deg,rgba(0,0,0,.035) 50%,transparent 50%);background-size:6px 6px}
+.cover::before{content:"ХЭРЭГ №2";position:absolute;top:-34px;left:-1px;height:34px;padding:5px 26px 0;background:var(--manila);border:1px solid var(--manila-d);border-bottom:none;border-radius:12px 12px 0 0;font-family:var(--mono);font-weight:700;letter-spacing:3px;color:var(--muted);font-size:17px}
+.cover .clip{position:absolute;top:-26px;right:70px;font-size:54px;transform:rotate(12deg)}
+.cover .stampBig{position:absolute;top:26px;right:34px;font-size:46px;padding:4px 22px}
+.cover .lab{font-family:var(--mono);font-size:16px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.cover .subject{font-weight:700;font-size:clamp(48px,6.4vw,84px);line-height:1;color:var(--noir);margin:4px 0 10px}
+.cover .topic{font-family:var(--mono);font-weight:700;font-size:clamp(22px,2.5vw,32px);line-height:1.3;color:var(--red-d);background:var(--paper);padding:10px 16px;border-left:8px solid var(--red);max-width:720px}
+.cover .fields{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:20px;border:2px solid var(--noir)}
+.cover .fields div{padding:9px 14px;border-right:2px solid var(--noir);font-weight:700;font-size:clamp(17px,1.7vw,22px);background:rgba(251,245,228,.55)}
+.cover .fields div:last-child{border-right:none}
+.cover .fields small{display:block;font-family:var(--mono);font-size:13px;letter-spacing:2px;color:var(--muted);font-weight:400}
+.cover svg.lens{position:absolute;right:46px;bottom:96px;width:150px;height:150px;opacity:.9}
+
+/* ===== 2. Brief ===== */
+.memo{background:var(--paper);box-shadow:var(--shadow);padding:18px 24px;position:relative;font-family:var(--mono);font-size:20px;line-height:1.5;border-top:12px solid var(--noir)}
+.memo .hdr{display:flex;justify-content:space-between;border-bottom:2px dashed var(--muted);padding-bottom:6px;margin-bottom:8px;font-size:16px;color:var(--muted)}
+.memo .q{background:var(--manila);padding:6px 12px;margin:6px 0;border-left:6px solid var(--red);font-weight:700}
+.memo .stamp{position:absolute;right:20px;top:-16px;font-size:26px;background:var(--paper)}
+.clue3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.clue3 div{background:var(--paper);border:2px solid var(--line);padding:8px;text-align:center;font-size:16px;font-weight:700}
+.clue3 div span{display:block;font-size:30px}
+.missions{list-style:none;padding:0;margin:6px 0 0}
+.missions li{display:flex;gap:10px;align-items:center;padding:5px 10px;margin:5px 0;background:var(--paper);border:2px dashed var(--line);font-weight:700;font-size:18px}
+.missions li .b{width:24px;height:24px;border:2px solid var(--noir);display:flex;align-items:center;justify-content:center;flex:none;color:var(--grn);font-weight:700}
+.missions li.done{border-style:solid;border-color:var(--grn);background:var(--grn-soft)}
+.badge{display:flex;gap:12px;align-items:center;background:var(--noir);color:var(--paper);padding:10px 14px;border-radius:6px;position:relative;margin-top:10px}
+.badge input{flex:1;min-width:0;background:var(--paper);border:none;padding:6px 10px;font-family:var(--mono);font-weight:700;font-size:18px;border-radius:3px}
+.badge .stamp{position:absolute;right:18px;top:-18px;font-size:20px;background:var(--paper);display:none}
+.badge .stamp.show{display:inline-block;animation:thump .45s ease-out}
+
+/* ===== 3. Case files ===== */
+.files{display:flex;flex-direction:column;gap:8px}
+.ftab{display:flex;gap:12px;align-items:center;text-align:left;background:var(--manila);border:1px solid var(--manila-d);border-left:10px solid var(--kraft-d);padding:10px 14px;font-weight:700;font-size:19px;box-shadow:0 4px 10px rgba(42,26,14,.2);border-radius:2px 8px 8px 2px;transition:.15s}
+.ftab .n{font-family:var(--mono);font-size:24px;color:var(--red);min-width:34px}
+.ftab:hover{transform:translateX(4px)}
+.ftab.on{border-left-color:var(--red);background:var(--paper);transform:translateX(8px)}
+.ftab.seen .n::after{content:" ✓";color:var(--grn);font-size:18px}
+.reader{min-height:340px}
+.reader .typed{font-size:21px}
+.reader .ask{margin-top:10px;background:var(--manila);padding:8px 12px;border-left:6px solid var(--noir);font-size:18px}
+.reader .ans{margin-top:6px;font-size:18px;color:var(--grn-d);font-weight:700}
+
+/* ===== 4. Clues ===== */
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ctile{position:relative;background:var(--manila);border:1px solid var(--manila-d);padding:10px 8px 8px;text-align:center;box-shadow:0 5px 12px rgba(42,26,14,.25);transition:.15s;min-height:96px}
+.ctile:hover{transform:rotate(-1.5deg) scale(1.03)}
+.ctile .ic{font-size:34px;display:block;line-height:1.1}
+.ctile .nm{font-weight:700;font-size:17px}
+.ctile .no{position:absolute;left:6px;top:4px;font-family:var(--mono);font-weight:700;color:var(--red);font-size:15px}
+.ctile.on{outline:4px solid var(--red);background:var(--paper)}
+.ctile.solved::after{content:"БАТЛАГДЛАА";position:absolute;inset:auto 4px 6px 4px;font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:1px;color:var(--grn);border:2px solid var(--grn);transform:rotate(-6deg);background:rgba(255,255,255,.7)}
+.lensbox{min-height:400px}
+.lensbox .who{font-family:var(--mono);font-size:16px;color:var(--muted);letter-spacing:1px}
+.lensbox .clue{font-family:var(--mono);font-size:22px;line-height:1.45;margin:8px 0 12px;padding:10px 14px;background:var(--paper);border:2px dashed var(--muted)}
+.opts{display:flex;flex-direction:column;gap:7px}
+.opt{text-align:left;background:var(--paper);border:2px solid var(--line);padding:8px 14px;font-weight:700;font-size:19px;border-radius:3px}
+.opt:hover{border-color:var(--noir)}
+.opt.ok{border-color:var(--grn);background:var(--grn-soft)}
+.opt.no{border-color:var(--red);background:var(--red-soft);text-decoration:line-through}
+.counter{font-family:var(--mono);font-weight:700;font-size:20px;background:var(--noir);color:var(--gold);padding:2px 12px;border-radius:3px}
+
+/* ===== 5. Evidence board ===== */
+.board{position:relative;background:var(--cork);border:10px solid #6e4a26;border-radius:4px;padding:12px;box-shadow:inset 0 0 30px rgba(0,0,0,.35),var(--shadow);
+  background-image:radial-gradient(rgba(90,55,20,.35) 1.2px,transparent 1.6px),radial-gradient(rgba(255,230,190,.25) 1px,transparent 1.4px);background-size:9px 9px,13px 13px}
+.pool{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;min-height:52px;padding:4px 4px 10px;border-bottom:2px dashed rgba(36,24,17,.4);margin-bottom:10px}
+.ecard{position:relative;background:var(--paper);padding:8px 12px 7px;font-weight:700;font-size:17px;box-shadow:0 4px 8px rgba(0,0,0,.35);cursor:grab;user-select:none;max-width:280px;line-height:1.25;border-top:5px solid var(--kraft-d)}
+.ecard:nth-child(odd){transform:rotate(-1.2deg)}.ecard:nth-child(even){transform:rotate(1.2deg)}
+.ecard.sel{outline:4px solid var(--gold)}
+.ecard.ok{border-top-color:var(--grn);cursor:default}
+.ecard.ok::before{content:"";position:absolute;top:-9px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff6b62,#9d1d16)}
+.bcols{display:grid;grid-template-columns:1fr 210px 1fr;gap:12px;align-items:stretch}
+.bcol{background:rgba(251,245,228,.25);border:3px dashed rgba(36,24,17,.55);border-radius:4px;padding:8px;min-height:250px;transition:.15s}
+.bcol.over,.bcol.target{background:rgba(251,245,228,.5);border-color:var(--noir)}
+.bcol h3{font-family:var(--mono);text-align:center;background:var(--noir);color:var(--paper);padding:3px;margin:0 0 8px;letter-spacing:2px;font-size:19px}
+.bcol .slots{display:flex;flex-direction:column;gap:9px;align-items:stretch}
+.bcol .slots .ecard{max-width:none;transform:none}
+.turn{display:flex;flex-direction:column;gap:8px;justify-content:center;text-align:center}
+.turn .hd{font-family:var(--mono);font-weight:700;background:var(--red);color:#fff;padding:4px;font-size:16px}
+.turn .inf{background:var(--manila);padding:6px;font-size:15px;font-weight:700;box-shadow:0 3px 6px rgba(0,0,0,.3)}
+#strings{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
+
+/* ===== 6. Interrogation ===== */
+.qlist{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.qbtn{background:var(--manila);border:1px solid var(--manila-d);padding:8px;font-family:var(--mono);font-weight:700;font-size:22px;position:relative;box-shadow:0 4px 8px rgba(42,26,14,.2)}
+.qbtn.on{background:var(--noir);color:var(--gold)}
+.qbtn.done::after{content:"✓";position:absolute;right:6px;top:2px;color:var(--grn);font-size:20px}
+.spot{position:relative;background:radial-gradient(ellipse at 50% 0%,rgba(255,236,170,.95) 0%,rgba(251,245,228,.95) 45%,rgba(220,200,160,.95) 100%);border:2px solid var(--noir);padding:20px 24px;min-height:300px;box-shadow:var(--shadow)}
+.spot .lamp{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:34px}
+.spot .qq{font-size:26px;font-weight:700;line-height:1.35;margin-top:16px}
+.spot .pg{font-family:var(--mono);color:var(--muted);font-size:16px;margin-top:6px}
+.spot .hint{margin-top:10px}
+
+/* ===== 7. Case 2 ===== */
+.tl{display:flex;flex-direction:column;gap:7px}
+.tlrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:var(--manila);border:1px solid var(--manila-d);padding:7px 10px;border-left:8px solid var(--kraft-d)}
+.tlrow.ok{border-left-color:var(--grn)}
+.tlrow .t{font-weight:700;font-size:17px}
+.tlrow .t small{display:block;font-weight:400;font-size:16px;line-height:1.3}
+.feel{display:flex;gap:4px}
+.feel button{font-size:26px;background:var(--paper);border:2px solid var(--line);border-radius:6px;padding:0 4px;line-height:1.3}
+.feel button.ok{border-color:var(--grn);background:var(--grn-soft)}
+.feel button.no{border-color:var(--red);background:var(--red-soft);opacity:.6}
+.cmp{display:flex;flex-direction:column;gap:6px}
+.cmprow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:var(--paper);padding:6px 10px;border:2px solid var(--line)}
+.cmprow.ok{border-color:var(--grn);background:var(--grn-soft)}
+.cmprow .t{font-weight:700;font-size:17px}
+.cmprow .bs{display:flex;gap:4px}
+.cmprow .bs button{border:2px solid var(--line);background:var(--manila);font-size:15px;font-weight:700;padding:3px 8px;border-radius:3px}
+.cmprow .bs button.ok{border-color:var(--grn);background:var(--grn);color:#fff}
+.cmprow .bs button.no{border-color:var(--red);background:var(--red-soft)}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:15px;color:var(--muted);margin-bottom:4px}
+
+/* ===== 8. Report ===== */
+.smap{display:flex;flex-direction:column;gap:6px}
+.smap label{display:grid;grid-template-columns:150px 1fr;gap:8px;align-items:center}
+.smap label span{font-weight:700;font-size:17px;background:var(--noir);color:var(--paper);padding:6px 8px;border-radius:3px;text-align:center}
+.smap textarea{width:100%;resize:none;height:54px;padding:5px 10px;font-size:18px;line-height:1.3;border:2px solid var(--line);background:var(--paper);border-radius:3px;font-family:var(--mono)}
+.smap textarea:focus{outline:none;border-color:var(--red)}
+.report{min-height:200px}
+.report .out{font-family:var(--mono);font-size:19px;line-height:1.5;max-height:calc(100vh - 470px);min-height:120px;overflow:auto;white-space:pre-wrap}
+.report .out:empty::before{content:"Хайрцгуудыг бөглөхөд товчоо энд бичигдэнэ…";color:#a8916c}
+.meter{height:16px;background:#e5d7b6;border-radius:8px;position:relative;margin:8px 0 2px;overflow:hidden}
+.meter .zone{position:absolute;top:0;bottom:0;background:rgba(46,125,50,.25);border-left:2px solid var(--grn);border-right:2px solid var(--grn)}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;background:var(--noir);width:0;transition:width .25s}
+.wc{display:flex;justify-content:space-between;font-family:var(--mono);font-size:16px;color:var(--muted)}
+.wc b{color:var(--ink);font-size:20px}
+.checks{list-style:none;padding:0;margin:6px 0 0;font-size:17px}
+.checks li{padding:3px 8px;margin:3px 0;border-left:5px solid var(--line);background:var(--paper)}
+.checks li.ok{border-color:var(--grn);background:var(--grn-soft)}
+.checks li.no{border-color:var(--red);background:var(--red-soft)}
+.keys{font-size:16px;margin-top:6px}
+
+/* ===== 9. Lab ===== */
+.lab{background:var(--paper);border:2px solid var(--noir);padding:12px 14px;box-shadow:var(--shadow);position:relative}
+.lab h3{font-family:var(--mono);letter-spacing:1px}
+.bigword{font-family:var(--mono);font-weight:700;font-size:54px;text-align:center;padding:8px;background:var(--manila);border:3px dashed var(--muted);margin:6px 0 10px;letter-spacing:2px}
+.bins{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bins .btn{font-size:18px;padding:10px 8px}
+.score{font-family:var(--mono);font-weight:700}
+.spell{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:center;margin:8px 0}
+.spell .w{font-family:var(--mono);font-weight:700;font-size:24px;padding:4px 10px;background:var(--manila)}
+.spell button{font-family:var(--mono);font-weight:700;font-size:24px;padding:8px;background:var(--paper);border:2px solid var(--line);border-radius:3px}
+.spell button.ok{border-color:var(--grn);background:var(--grn-soft)}
+.spell button.no{border-color:var(--red);background:var(--red-soft);text-decoration:line-through}
+
+/* ===== 10. Verdict ===== */
+.prov{display:flex;flex-direction:column;gap:6px}
+.prov button{text-align:left;background:var(--paper);border:2px solid var(--line);padding:7px 12px;font-weight:700;font-size:18px;border-radius:3px}
+.prov button.ok{border-color:var(--grn);background:var(--grn-soft)}
+.prov button.no{border-color:var(--red);background:var(--red-soft)}
+.frames .fr{display:flex;align-items:baseline;gap:8px;margin:7px 0;font-weight:700;font-size:19px;flex-wrap:wrap}
+.frames .fr div[contenteditable]{flex:1;min-width:200px;border-bottom:2px dashed var(--noir);outline:none;padding:1px 6px;font-weight:400;font-family:var(--mono);color:var(--red-d)}
+.frames .fr div[contenteditable]:empty::before{content:attr(data-ph);color:#a8916c}
+.stars3{display:flex;gap:10px}
+.stars3 button{font-size:40px;border:none;background:none;filter:grayscale(1);opacity:.4;transition:.2s;padding:0}
+.stars3 button.on{filter:none;opacity:1;transform:scale(1.1)}
+.closeStamp{display:none;font-size:30px;margin:6px auto 0}
+.closeStamp.show{display:inline-block;animation:thump .45s ease-out}
+
+@media (max-height:900px){
+  body{font-size:18px}
+  h2{font-size:27px;margin-bottom:6px}
+  .tag{font-size:13px;margin-bottom:4px}
+  .folder{padding:11px 14px}
+  .folder.tabbed{margin-top:20px}
+  .paper{padding:12px 16px}
+  .def{padding:6px 10px;margin:4px 0;font-size:18px}
+  .memo{font-size:18px;padding:12px 18px;line-height:1.4}
+  .memo .q{padding:4px 10px;margin:4px 0}
+  .clue3 div{padding:5px;font-size:15px}.clue3 div span{font-size:24px}
+  .missions li{padding:3px 8px;margin:3px 0;font-size:16px}
+  .cover{padding:24px 30px 18px}
+  .cover .subject{font-size:60px}
+  .cover svg.lens{width:110px;height:110px;bottom:80px}
+  .ftab{padding:7px 12px;font-size:18px}
+  .reader{min-height:300px}.reader .typed{font-size:19px}
+  .reader .ask{font-size:18px}
+  .ctile{min-height:84px;padding:7px 6px 6px}.ctile .ic{font-size:28px}
+  .lensbox{min-height:360px}
+  .lensbox .clue{font-size:19px;padding:8px 12px;margin:6px 0 10px}
+  .opt{padding:6px 12px;font-size:18px}
+  .bcol{min-height:220px}
+  .ecard{font-size:16px;padding:6px 10px 5px}
+  .pool{min-height:44px}
+  .spot{min-height:250px;padding:16px 20px}.spot .qq{font-size:23px}
+  .tlrow{padding:5px 8px}.tlrow .t small{font-size:15px}
+  .feel button{font-size:22px}
+  .cmprow{padding:4px 8px}.cmprow .t{font-size:16px}
+  .smap textarea{height:48px;font-size:18px}
+  .smap label span{font-size:16px;padding:4px 6px}
+  .report .out{font-size:18px}
+  .bigword{font-size:44px;padding:4px;margin:4px 0 8px}
+  .spell{margin:5px 0}.spell .w,.spell button{font-size:20px;padding:5px}
+  .prov button{padding:5px 10px;font-size:17px}
+  .frames .fr{margin:5px 0;font-size:18px}
+  .stars3 button{font-size:32px}
+}
+@media (max-width:1000px){
+  .tasks{display:none}
+  .grid2,.bcols{grid-template-columns:1fr !important}
+  .cover .fields{grid-template-columns:1fr}
+  .cover .fields div{border-right:none;border-bottom:2px solid var(--noir)}
+  .cover svg.lens{display:none}
+  .dots{display:none}
+  .qlist{grid-template-columns:repeat(4,1fr)}
+  .slide{overflow:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="tb"><span><span class="lbl">Хичээл</span><span class="val">🔍 Монгол хэл · 5-р анги</span></span></div>
+  <div class="tb mid"><span style="min-width:0;display:block"><span class="lbl">Хэргийн хавтас №2 · <span id="sheetNo">Хуудас 1/10</span></span><span class="val" id="stageName"></span></span></div>
+  <div class="tb">
+    <div class="tasks" title="Мөрдөгчийн даалгавар"><span id="tk1">① Сэжүүр</span><span id="tk2">② Самбар</span><span id="tk3">③ Хэрэг №2</span><span id="tk4">④ Тайлан</span><span id="tk5">⑤ Лаб</span></div>
+    <div class="timer" id="timer" title="Хичээлийн үлдсэн хугацаа (2 удаа дарвал 40:00 болно)">⏱ <span id="tval">40:00</span></div>
+    <button class="tbtn" id="tPlay" title="Цаг эхлүүлэх / зогсоох">▶</button>
+    <button class="tbtn" id="notesBtn" title="Багшийн тэмдэглэл (N)">📝</button>
+    <button class="tbtn" id="fsBtn" title="Бүтэн дэлгэц (F)">⛶</button>
+  </div>
+</header>
+
+<main class="deck">
+
+<!-- 1. Нүүр -->
+<section class="slide" data-name="Хэргийн хавтас" data-min="1"
+  data-notes="Сурагчидтай мэндэлнэ. Өнөөдөр бид «мөрдөгч» болж зохиолын баатрын зан чанар, түүний өөрчлөлтийг судална.|Хичээлийн явц: Даалгавар → Хэргийн материал (унших) → Сэжүүр → Нотлох баримтын самбар → Байцаалт → Хэрэг №2 → Тайлан (товчлох) → Балархай эгшгийн лаборатори → Шүүгчийн шийдвэр.|Дээд талын ▶ товчоор 40 минутын цагийг эхлүүлнэ (цаг дээр 2 удаа дарвал 40:00 болно). N — тэмдэглэл, F — бүтэн дэлгэц, ← / → — слайд солих.|Эх сурвалж: «Монгол хэл V» сурах бичиг, 2-р бүлэг, х.19–32.">
+  <div class="inner cover-wrap">
+    <div class="cover">
+      <span class="clip">📎</span>
+      <span class="stamp stampBig">НУУЦ</span>
+      <div class="lab">Хэргийн хавтас · Монгол хэл V · 2-р бүлэг</div>
+      <div class="subject">Монгол хэл</div>
+      <div class="topic">Зохиолын баатрын зан чанарын өөрчлөлтийг дүгнэе, зохиолыг товчлон бичье</div>
+      <svg class="lens" viewBox="0 0 150 150" aria-hidden="true"><circle cx="58" cy="58" r="42" fill="rgba(255,255,255,.35)" stroke="#241811" stroke-width="10"/><circle cx="58" cy="58" r="30" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="3" stroke-dasharray="30 160"/><path d="M90 90 L136 136" stroke="#241811" stroke-width="16" stroke-linecap="round"/><path d="M90 90 L136 136" stroke="#6e4a26" stroke-width="8" stroke-linecap="round"/></svg>
+      <div class="fields">
+        <div><small>СУРГУУЛЬ</small>🏫 1-р сургууль</div>
+        <div><small>ХЭРГИЙГ ХАРИУЦАГЧ</small>👩‍🏫 Багш: В. Гэрэлтуяа</div>
+        <div><small>МӨРДӨГЧИД</small>🕵️ 5-р анги</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Хэргийн даалгавар -->
+<section class="slide" data-name="Хэргийн даалгавар" data-min="2"
+  data-notes="Даалгаврыг мөрдөгчийн дуу хоолойгоор, нууцлаг өнгөөр уншина.|«Зан чанар гэж юу вэ?» гэж 2–3 сурагчаас асууна. Зохиолын баатрын зан чанарыг түүний яриа, үйлдэл, бодлоос нь мэддэг гэдгийг тэмдэглэнэ (х.22, хэлэлцүүлгийн даалгавар).|Багийн нэрийг бичээд «Тангараг өргөх» дарна — нэр нь сүүлийн слайдад гарна.|Баруун талын 5 даалгавар (дээд мөрөнд ①–⑤) биелэх тусам гэрэлтэнэ.">
+  <div class="inner">
+    <span class="tag">Хавтас <b>01</b> · Даалгавар</span>
+    <h2>🕵️ Мөрдөгчид ээ, шинэ хэрэг ирлээ!</h2>
+    <div class="grid2" style="grid-template-columns:1.1fr .9fr">
+      <div>
+        <div class="memo">
+          <div class="hdr"><span>ХЭНД: 5-р ангийн мөрдөгчид</span><span>ХЭНЭЭС: Мөрдөх товчоо</span></div>
+          <span class="stamp">НУУЦ</span>
+          Нэгэн тосгонд Котька гэдэг хүү ганцхан оройн дотор <b>огт өөр хүүхэд</b> болжээ. Түүнд юу тохиолдсон бэ? Хэргийг тайлж, хоёр асуултад хариулна уу:
+          <div class="q">❓ Баатар ямар зан чанартай хүүхэд бэ?</div>
+          <div class="q">❓ Тэр хэрхэн, яагаад өөрчлөгдсөн бэ?</div>
+        </div>
+        <div class="def r" style="margin-top:10px"><b>Зан чанар</b> — хүний байнга илэрдэг онцлог: шударга, аймхай, хариуцлагатай гэх мэт.</div>
+        <div class="clue3">
+          <div><span>💬</span>Юу гэж <u>ярьсан</u></div>
+          <div><span>🏃</span>Юу <u>хийсэн</u></div>
+          <div><span>💭</span>Юу гэж <u>бодсон</u></div>
+        </div>
+      </div>
+      <div>
+        <div class="folder tabbed" data-tab="ДААЛГАВРУУД">
+          <ul class="missions" id="missions">
+            <li data-t="1"><span class="b"></span>① Сэжүүр цуглуулах</li>
+            <li data-t="2"><span class="b"></span>② Нотлох баримтын самбар</li>
+            <li data-t="3"><span class="b"></span>③ Хэрэг №2: Цэрэн</li>
+            <li data-t="4"><span class="b"></span>④ Хэргийн тайлан (товчлох)</li>
+            <li data-t="5"><span class="b"></span>⑤ Балархай эгшгийн лаборатори</li>
+          </ul>
+        </div>
+        <div class="badge">
+          <span style="font-size:30px">📛</span>
+          <input id="teamName" maxlength="40" placeholder="Мөрдөгчдийн багийн нэр…">
+          <button class="btn red sm" id="oath">🔍 Тангараг өргөх</button>
+          <span class="stamp" id="badgeStamp">ЗӨВШӨӨРӨВ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Хэргийн материал -->
+<section class="slide" data-name="Хэргийн материал: «Өргөст хэмх»" data-min="5"
+  data-notes="Н.Носовын «Өргөст хэмх» өгүүллэгийг сурах бичгийн х.19–21-ээс багш чангаар уншина (≈3 мин). Өгүүллэг 4 хэсэгтэй.|Хэсэг бүрийг уншсаны дараа тухайн хавтсыг нээж, товч агуулгыг харуулаад доорх асуултыг асууна. Асуултууд нь «Уншсанаа сэргээн санаарай» (х.22, 1-р даалгавар).|Слайд дээрх товчоо нь эх зохиол биш, өөрийн үгээр бичсэн тойм. Эхийг заавал сурах бичгээс уншина.">
+  <div class="inner">
+    <span class="tag">Хавтас <b>02</b> · Хэргийн материал</span>
+    <h2>📂 Н.Носов «Өргөст хэмх» <span class="src">📖 Сурах бичиг х.19–21</span></h2>
+    <div class="grid2" style="grid-template-columns:.75fr 1.25fr">
+      <div class="files" id="files"></div>
+      <div class="paper reader" id="reader">
+        <div class="typed muted">👈 Багш хэсэг бүрийг уншсаны дараа хавтсыг нээгээрэй.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Сэжүүр -->
+<section class="slide" data-name="Сэжүүр цуглуулах" data-min="6"
+  data-notes="Хэлэлцүүлгийн даалгавар (х.22–23): баатруудын харилцан яриа, бодлоос зан чанарыг дүгнэнэ.|Дугаартай хавтас дээр дарж сэжүүрийг томруулна. Сурагчид гараа өргөж зан чанарыг сонгоно. Буруу бол дахин бодуулна.|Зөв хариулт бүрийн дараа «Зохиолын аль хэсэгт ингэж хэлсэн бэ?» гэж асууж, нотолгоо хэлүүлнэ.|Павликийн тухай сурах бичгийн жишээ хариулт (х.23, 1-р асуулт) — бусдыг уруу татдаг, өөрөө хэргээс мултардаг, шударга бус.|Сэжүүр бүр зохиолын үйл явдлыг өөрийн үгээр товчилсон; ганц ишлэл нь №9 (х.22, 2-р даалгаврын асуултад байгаа).">
+  <div class="inner">
+    <span class="tag">Хавтас <b>03</b> · Сэжүүр</span>
+    <h2>🔍 Сэжүүр цуглуулъя <span class="counter" id="clueCnt">0/9</span></h2>
+    <div class="grid2" style="grid-template-columns:.9fr 1.1fr">
+      <div class="cgrid" id="cgrid"></div>
+      <div class="folder lensbox" id="lensbox">
+        <div class="typed muted">👈 Сэжүүрийн хавтсыг сонгоорой. Баатрын <b>үг, үйлдэл, бодол</b>-оос түүний зан чанарыг ол!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Нотлох баримтын самбар -->
+<section class="slide" data-name="Нотлох баримтын самбар" data-min="5"
+  data-notes="Хэлэлцүүлгийн 4, 7-р асуулт (х.23): Котька зохиолын эхэнд ямар байсан, төгсгөлд яаж өөрчлөгдсөн бэ?|Картыг хулганаар чирэх, эсвэл картыг дараад багана дээр дарж байрлуулна. Эсрэг утгатай хос бүрдэхэд улаан утас татагдана.|Дунд талын «Эргэлтийн цэг» нь оюуны зураглалын даалгавар (х.23, 2-р даалгавар): Павлик, ээж, сахиул өвгөн Котькад хэрхэн нөлөөлсөн бэ? Аман ярилцлага.|Бүгдийг байрлуулсны дараа «Дүгнэлт» товчоор нэгтгэнэ.">
+  <div class="inner">
+    <span class="tag">Хавтас <b>04</b> · Нотлох баримт</span>
+    <h2>🧵 Котька хэрхэн өөрчлөгдсөн бэ?</h2>
+    <div class="board" id="board">
+      <svg id="strings"></svg>
+      <div class="pool" id="pool"></div>
+      <div class="bcols">
+        <div class="bcol" id="colA" data-side="a"><h3>ЭХЭНДЭЭ</h3><div class="slots"></div></div>
+        <div class="turn">
+          <div class="hd">🔄 ЭРГЭЛТИЙН ЦЭГ</div>
+          <div class="inf">👦 Павлик уруу татсан</div>
+          <div class="inf">👩 Ээжийн хатуу шаардлага</div>
+          <div class="inf">🌙 Харанхуй замд ганцаараа бодсон</div>
+          <div class="inf">👴 Өвгөний сургаал</div>
+        </div>
+        <div class="bcol" id="colB" data-side="b"><h3>ТӨГСГӨЛД</h3><div class="slots"></div></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <div class="fb" id="boardFb" style="flex:1;margin:0">👆 Картыг чирж, эсвэл дараад баганаа сонгоорой.</div>
+      <button class="btn ghost sm" id="boardReset">↺ Дахин</button>
+      <button class="btn red sm" id="boardConc">🔍 Дүгнэлт</button>
+    </div>
+    <div class="def g hide" id="boardAns">Котька эхэндээ найзыгаа бодолгүй дуурайдаг, хийснээ хулгай гэж ойлгоогүй хүүхэд байв. Ээжийн шаардлага, өвгөний сургаалаар <b>үнэнч, хариуцлагатай, өөрөө бодож шийддэг</b> болж өөрчлөгдсөн.</div>
+  </div>
+</section>
+
+<!-- 6. Байцаалт -->
+<section class="slide" data-name="Байцаалтын өрөө" data-min="2"
+  data-notes="Хэлэлцүүлгийн асуултууд: х.22 (2, 3-р даалгавар), х.23 (1-р даалгаврын асуултууд).|Хугацаа бага тул 1–2 асуулт сугалж ярилцана. Үлдсэнийг дараагийн хичээлд эсвэл гэрт.|«💡 Санаа» товч нь багшид зориулсан хариултын чиглэл — эхлээд сурагчдаар хариулуулна.">
+  <div class="inner">
+    <span class="tag">Хавтас <b>05</b> · Байцаалт</span>
+    <h2>🔦 Байцаалтын өрөө — гэрчүүдээс асууя</h2>
+    <div class="grid2" style="grid-template-columns:.8fr 1.2fr">
+      <div>
+        <div class="qlist" id="qlist"></div>
+        <div class="row" style="margin-top:12px"><button class="btn red" id="qRand">🎲 Асуулт сугалах</button></div>
+        <p class="muted" style="font-size:17px;margin:10px 0 0">Хариулахдаа зохиолоос <b>жишээ</b> татаарай: «Учир нь … гэж хэлсэн / хийсэн».</p>
+      </div>
+      <div class="spot" id="spot">
+        <span class="lamp">💡</span>
+        <div class="qq" id="qq">🎲 Асуулт сугалж, эсвэл дугаар сонгоорой.</div>
+        <div class="pg" id="qpg"></div>
+        <div class="row hint"><button class="btn ghost sm hide" id="qHintBtn">💡 Санаа</button><button class="btn grn sm hide" id="qDone">✓ Хариулсан</button></div>
+        <div class="def g hide" id="qHint" style="font-size:18px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Хэрэг №2 -->
+<section class="slide" data-name="Хэрэг №2: «Шувуунд хайртай хүү»" data-min="6"
+  data-notes="С.Эрдэнийн «Шувуунд хайртай хүү» өгүүллэг (х.25–26). Хугацаа хэмнэх бол 3, 4-р хэсгийг багш чангаар, 1–2-р хэсгийг сурагчид чимээгүй уншина.|Хэсэг бүрт Цэрэнгийн сэтгэл хөдлөлийг сонгоно. Холбогдох асуулт: х.26, 2-р даалгавар (4) «Цэрэн яагаад гэмээ ухаарсан бэ?», 3-р даалгавар (1).|Харьцуулалт: Котька, Цэрэн хоёрын ижил ба ялгаатай тал. Хоёулаа буруу зүйл хийгээд, эцэст нь «ухаарсан».">
+  <div class="inner">
+    <span class="tag">Хавтас <b>06</b> · Хэрэг №2</span>
+    <h2>🦅 С.Эрдэнэ «Шувуунд хайртай хүү» <span class="src">📖 Сурах бичиг х.25–26</span></h2>
+    <div class="grid2" style="grid-template-columns:1.1fr .9fr">
+      <div>
+        <div class="legend">Цэрэн ямар сэтгэлтэй байв? 😊 баяртай · 😢 харамссан · 😠 өс хонзонтой · 😔 гэмшсэн</div>
+        <div class="tl" id="tl"></div>
+      </div>
+      <div class="folder tabbed" data-tab="ХАРЬЦУУЛАЛТ">
+        <div class="legend" style="margin-bottom:6px">Хэний тухай вэ? 👦 Котька · 🧒 Цэрэн · 🤝 Хоёулаа</div>
+        <div class="cmp" id="cmp"></div>
+        <div class="fb" id="c2Fb"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Хэргийн тайлан -->
+<section class="slide" data-name="Хэргийн тайлан: товчлон бичих" data-min="6"
+  data-notes="Эхийг товчлох (х.27–28): гол санааг өөрчлөхгүйгээр үгийн тоог цөөлж бичнэ.|Аль нэг зохиолыг сонгоод 5 асуултад тус бүр 1 өгүүлбэрээр хариулна. Баруун талд товчоо автоматаар угсрагдана.|«Товч байна уу?» товч: бүх хайрцаг бөглөгдсөн эсэх, баатрын нэр орсон эсэх, үгийн тоо 25–80 хооронд байгаа эсэхийг шалгана.|Сурах бичгийн тулгуур бичиглэл (х.27, 1-р даалгавар) ба төлөвлөгөө (х.28: Цэрэн → Хоёр бүргэд → Харамссан нь → Ухаарсан нь)-тэй холбоно. Бүрэн товчоог (120 орчим үг) гэрийн даалгавраар бичнэ.|Бичсэн зүйл энэ компьютерт хадгалагдана.">
+  <div class="inner">
+    <span class="tag">Хавтас <b>07</b> · Тайлан</span>
+    <h2>🗂️ Хэргийн тайлан = товчлон бичих</h2>
+    <div class="grid2" style="grid-template-columns:1.05fr .95fr">
+      <div>
+        <div class="row" style="margin-bottom:6px"><button class="btn ghost sm" data-story="k">🥒 Өргөст хэмх</button><button class="btn ghost sm" data-story="c">🦅 Шувуунд хайртай хүү</button><button class="btn ghost sm" id="keysBtn">🔑 Гол үгс</button></div>
+        <div class="smap" id="smap"></div>
+        <div class="def keys hide" id="keys"></div>
+      </div>
+      <div class="paper report">
+        <div class="row" style="justify-content:space-between"><b class="mono">📄 ТОВЧ ТАЙЛАН</b><span class="stamp" style="font-size:15px;transform:rotate(-4deg)">ТОВЧЛОВ</span></div>
+        <div class="out" id="sumOut"></div>
+        <div class="meter"><div class="zone" id="zone"></div><div class="fill" id="fill"></div></div>
+        <div class="wc"><span>Үг: <b id="wcN">0</b></span><span>товч бүс: 25–80 үг</span></div>
+        <div class="row" style="margin-top:6px"><button class="btn red sm" id="sumChk">🔍 Товч байна уу?</button></div>
+        <ul class="checks" id="sumChecks"></ul>
+        <div class="fb" id="sumFb"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Балархай эгшиг -->
+<section class="slide" data-name="Лаборатори: балархай эгшиг" data-min="4"
+  data-notes="Балархай эгшгийн үүрэг (х.28): «бодол» гэдэг үгийн «о» нь «л»-ийг эгшигжүүлдэг; «бодлыг» гэхэд гээгддэг.|1-р туршилт — утга ялгах балархай эгшиг: торх / торох, хонх / хонох … (х.30–31, «Үйл үгийн х гийгүүлэгчийг ялган зөв бичих»). Үг бүрийг чангаар хэлүүлж, «Юу?» эсвэл «Яах?» гэж асуулт тавиулна.|2-р туршилт — «Н, Г»-г ялгах эгшиг гээгдэхгүй (х.30: онол+ын, шагнал+аа, хотгор+оос, торгон+ы). Харьцуулахад бодол+ыг, ажил+ыг гэх мэтэд балархай эгшиг гээгддэг.|Сурагчдыг ээлжлэн самбарт гаргаж сонгуулна.">
+  <div class="inner">
+    <span class="tag">Хавтас <b>08</b> · Лаборатори</span>
+    <h2>🧪 Балархай эгшгийн лаборатори <span class="src">📖 х.28–31</span></h2>
+    <div class="def r" style="margin:0 0 10px"><b>Балархай эгшиг</b> — бичигддэг ч бүрэн тод дуудагддаггүй эгшиг. Тэр нь <b>утга ялгаж</b>, гийгүүлэгчийг <b>ялгаж</b> өгдөг. Жишээ: бод<b>о</b>л → бод<u>л</u>ыг (гээгдэв).</div>
+    <div class="grid2">
+      <div class="lab">
+        <h3>🔬 Туршилт 1 · Нэг эгшиг — өөр утга</h3>
+        <div class="row" style="justify-content:space-between;font-size:17px"><span class="muted">Энэ үг юуг заах вэ?</span><span class="score" id="aScore">0/10</span></div>
+        <div class="bigword" id="aWord">торх</div>
+        <div class="bins"><button class="btn" id="aN">📦 Юм — Юу?</button><button class="btn red" id="aV">🏃 Үйл — Яах?</button></div>
+        <div class="fb" id="aFb"></div>
+      </div>
+      <div class="lab">
+        <h3>🧫 Туршилт 2 · Гээгдэх үү, үлдэх үү?</h3>
+        <div class="muted" style="font-size:17px">Зөв бичлэгийг сонго. <span class="score" id="bScore">0/6</span></div>
+        <div id="spell"></div>
+        <div class="fb" id="bFb" style="font-size:17px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Шүүгчийн шийдвэр -->
+<section class="slide" data-name="Шүүгчийн шийдвэр" data-min="3"
+  data-notes="Хэлц үг (х.24, 1-р даалгавар): «Өргөст хэмх» өгүүллэгийн гол санаатай тохирох хэлц үгийг сонгоод, «яагаад?» гэж тайлбарлуулна.|Шүүгчийн шийдвэрийг ангиараа гүйцээж, 2–3 сурагчаар уншуулна. Одоор өөрийгөө үнэлнэ.|Гэрийн даалгавар: (1) х.28 — «Шувуунд хайртай хүү»-г төлөвлөгөөний дагуу 120 орчим үгээр товчлон бичих; (2) сонголтоор х.24, 2-р даалгавар — «Котькагийн зан чанарын өөрчлөлт» зохион бичлэг (эхлэл, гол, төгсгөл); (3) х.31, 4-р даалгавар — хос үгсийн утгыг ялгах.|«Хэргийг хаах» товчоор хичээлийг дуусгана.">
+  <div class="inner">
+    <span class="tag">Хавтас <b>09</b> · Шийдвэр</span>
+    <h2>⚖️ Шүүгчийн шийдвэр</h2>
+    <div class="grid2" style="grid-template-columns:1.15fr .85fr">
+      <div>
+        <div class="folder" style="padding-top:10px">
+          <b>📜 Аль хэлц үг «Өргөст хэмх»-ийн гол санаатай тохирох вэ? <span class="muted" style="font-weight:400;font-size:16px">(х.24)</span></b>
+          <div class="prov" id="prov" style="margin-top:6px"></div>
+          <div class="fb" id="provFb" style="font-size:17px"></div>
+        </div>
+        <div class="paper frames" style="margin-top:10px">
+          <div class="fr">Котька эхэндээ <div contenteditable="true" data-k="mk2_v1" data-ph="ямар хүүхэд байсан бэ…"></div> байсан.</div>
+          <div class="fr">Төгсгөлд нь <div contenteditable="true" data-k="mk2_v2" data-ph="ямар болсон бэ…"></div> болсон.</div>
+          <div class="fr">Учир нь <div contenteditable="true" data-k="mk2_v3" data-ph="хэн, юу нөлөөлсөн бэ…"></div></div>
+        </div>
+      </div>
+      <div class="folder">
+        <h3>⭐ <span class="teamOut">5-р ангийн мөрдөгчид</span> хэргийг хэрхэн тайлсан бэ?</h3>
+        <div class="stars3" id="stars3"><button>⭐</button><button>⭐</button><button>⭐</button></div>
+        <div class="def r" style="font-size:17px;margin-top:10px">🏠 <b>Гэрийн даалгавар:</b><br>① х.28 — «Шувуунд хайртай хүү»-г 4 хэсгийн төлөвлөгөөгөөр <b>120 орчим үгээр</b> товчлон бичих.<br>② Сонголтоор х.24 — «Котькагийн зан чанарын өөрчлөлт» зохион бичлэг.</div>
+        <div style="text-align:center"><button class="btn red" id="closeCase">🔒 Хэргийг хаах</button><br><span class="stamp closeStamp" id="closeStamp">ХЭРЭГ ХААГДЛАА</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="nav">
+  <button class="btn" id="prevBtn">◀ Өмнөх</button>
+  <div class="dots" id="dots"></div>
+  <button class="btn" id="nextBtn">Дараах ▶</button>
+</nav>
+<div class="tnotes" id="tnotes"><h4>📝 Багшид зориулсан тэмдэглэл</h4><ul id="tnList"></ul></div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ---------- Helpers ---------- */
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a}
+function setFb(id,ok,msg){const e=$(id);e.className='fb '+(ok===null?'':ok?'ok':'no');e.innerHTML=msg}
+function bump(e){e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake')}
+
+/* ---------- Mission tracker ---------- */
+const DONE={};
+function solve(k){if(DONE[k])return;DONE[k]=true;$('tk'+k).classList.add('on');const li=document.querySelector('#missions li[data-t="'+k+'"]');if(li){li.classList.add('done');li.querySelector('.b').textContent='✓'}confetti(80)}
+
+/* ---------- Slides ---------- */
+const slides=[...document.querySelectorAll('.slide')];const dots=$('dots');let cur=0;
+slides.forEach((s,i)=>{const b=document.createElement('button');b.className='dot';b.textContent=String(i+1).padStart(2,'0');b.title=s.dataset.name;b.onclick=()=>go(i);dots.appendChild(b)});
+function go(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,j)=>s.classList.toggle('active',j===cur));
+  [...dots.children].forEach((d,j)=>{d.classList.toggle('on',j===cur);d.classList.toggle('done',j<cur)});
+  const s=slides[cur];
+  $('stageName').textContent=s.dataset.name;$('sheetNo').textContent='Хуудас '+(cur+1)+'/'+slides.length;
+  $('tnList').innerHTML='<li>⏱ Зөвлөмж хугацаа: ≈'+s.dataset.min+' мин</li>'+s.dataset.notes.split('|').map(t=>'<li>'+t+'</li>').join('');
+  $('prevBtn').disabled=cur===0;$('nextBtn').textContent=cur===slides.length-1?'🏁 Төгсгөл':'Дараах ▶';
+  if(s.contains($('board'))){drawStrings();setTimeout(drawStrings,400)}
+}
+$('prevBtn').onclick=()=>go(cur-1);$('nextBtn').onclick=()=>go(cur+1);
+document.addEventListener('keydown',e=>{
+  const t=e.target;if(t.isContentEditable||t.tagName==='INPUT'||t.tagName==='TEXTAREA')return;
+  if(e.key==='ArrowRight'||e.key==='PageDown')go(cur+1);
+  else if(e.key==='ArrowLeft'||e.key==='PageUp')go(cur-1);
+  else if(e.key==='f'||e.key==='F'||e.key==='а'||e.key==='А')toggleFS();
+  else if(e.key==='n'||e.key==='N'||e.key==='т'||e.key==='Т')toggleNotes();
+});
+function toggleFS(){try{if(!document.fullscreenElement){if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen()}else if(document.exitFullscreen)document.exitFullscreen()}catch(e){}}
+function toggleNotes(){$('tnotes').classList.toggle('show')}
+$('fsBtn').onclick=toggleFS;$('notesBtn').onclick=toggleNotes;
+window.addEventListener('resize',()=>{if(slides[cur].contains($('board')))drawStrings()});
+
+/* ---------- Timer ---------- */
+let remain=40*60,running=false,tick=null;
+function drawT(){const a=Math.abs(remain),m=Math.floor(a/60),s=a%60;$('tval').textContent=(remain<0?'+':'')+m+':'+String(s).padStart(2,'0');$('timer').className='timer'+(remain<0?' over':remain<=300?' warn':'')}
+$('tPlay').onclick=()=>{running=!running;$('tPlay').textContent=running?'⏸':'▶';if(running)tick=setInterval(()=>{remain--;drawT()},1000);else clearInterval(tick)};
+$('timer').ondblclick=()=>{remain=40*60;drawT()};drawT();
+
+/* ---------- Saved editable fields ---------- */
+document.querySelectorAll('[data-k]').forEach(e=>{const k=e.dataset.k;e.textContent=store.get(k)||'';e.addEventListener('input',()=>store.set(k,e.innerText))});
+
+/* ================= 2. Brief ================= */
+const tn=$('teamName');tn.value=store.get('mk2_team')||'';
+function updTeam(){const v=tn.value.trim();document.querySelectorAll('.teamOut').forEach(e=>e.textContent=v||'5-р ангийн мөрдөгчид')}
+tn.addEventListener('input',()=>{store.set('mk2_team',tn.value);updTeam()});updTeam();
+$('oath').onclick=()=>{const st=$('badgeStamp');st.classList.remove('show');void st.offsetWidth;st.classList.add('show');confetti(50)};
+
+/* ================= 3. Case files ================= */
+const PARTS=[
+ {t:'Павликийн бодол',s:'Павлик, Котька хоёр загасчлахаар явсан ч нэг ч загас барьсангүй. Буцах замдаа хамтралын ногооны газраас халаас дүүрэн өргөст хэмх авчээ. Сахиул өвгөн шүгэлдсэн ч тэд зугтав. Гэртээ загнуулахаас айсан Павлик өөрийн хэмхийг бүгдийг нь Котькад өгчихөв.',
+  q:'Тэд ногооны газраас юу авсан бэ? Павлик яагаад бүх хэмхээ Котькад өгсөн бэ? (х.22, 1-р даалгавар, 1–2)',a:'Өргөст хэмх авсан. Гэрийнхэндээ зэмлүүлэхээс айсан учраас.'},
+ {t:'Чи миний хүү биш',s:'Котька баяртайгаар хэмхээ ээждээ авчирлаа. Ээж нь хэнээс ч асуулгүй авсан бол хулгай гэж хэлээд, хэмхийг яг тасалсан газарт нь буцааж тавихыг шаардав. Харанхуйд ганцаараа явахаас айсан Котька уйлсан ч ээж нь шийдвэрээсээ буцсангүй.',
+  q:'Ээж нь Котькад юу гэж хэлсэн бэ? Котька яагаад уйлсан бэ? (х.22, 1-р даалгавар, 3–4)',a:'Зөвшөөрөлгүй авбал хулгай, буцааж аваач гэсэн. Харанхуйд ганцаараа явах, сахиулаас айсан.'},
+ {t:'Хоёр янзын бодол',s:'Харанхуй гудамжаар явахдаа Котька хэмхээ шуудуу руу хаяад «өгчихлөө» гэж худлаа хэлэх үү гэж бодов. Гэвч сахиул өвгөн өөрөөс нь болж буруутна гэж бодоод, буцааж өгөхөөр шийдэв. Замдаа санаа амар гэртээ сууж байгаа Павликийг бодож явлаа.',
+  q:'Котька хэмхийг яая гэж бодсон бэ? Гудамжаар явахдаа юуны тухай бодсон бэ? (х.22, 1-р даалгавар, 5–6)',a:'Хаяад, худлаа хэлэх гэж бодсон ч больсон. Павлик гэртээ юунаас ч айхгүй сууж байгаа даа гэж бодсон.'},
+ {t:'Өргөст хэмх бэлэглэсэн нь',s:'Котька уйлсаар сахиул өвгөнд очиж хэмхийг нь буцааж өгөв. Нэгийг нь идчихсэнээ өөрөө үнэнээр хэлэв. Өвгөн түүнийг найзаа дуурайлгүй өөрөө бодож байхыг сургаад, идсэн хэмхийг бэлэг гэж үзье гэв. Котька сэтгэл хангалуун гэртээ харив.',
+  q:'Котька өвгөнд юу гэж тайлбарласан бэ? Идсэн нэг хэмхийг өвгөн яаж шийдсэн бэ? (х.22, 1-р даалгавар, 7–8)',a:'Павликийг дагаж авсан, ээж нь буцааж өг гэсэн гэж хэлсэн. Өвгөн түүнийг бэлэг гэж үзье гэсэн.'}
+];
+(()=>{const box=$('files');PARTS.forEach((p,i)=>{const b=document.createElement('button');b.className='ftab';b.innerHTML='<span class="n">'+(i+1)+'</span><span>📁 '+p.t+'</span>';
+  b.onclick=()=>{[...box.children].forEach(x=>x.classList.remove('on'));b.classList.add('on','seen');
+    $('reader').innerHTML='<div class="row" style="justify-content:space-between"><b class="mono" style="color:var(--red-d)">ХЭСЭГ '+(i+1)+' · '+p.t.toUpperCase()+'</b><span class="src">📖 х.19–21</span></div><div class="typed" style="margin-top:8px">'+p.s+'</div><div class="ask">❓ '+p.q+'</div><button class="btn ghost sm" style="margin-top:8px" id="ansBtn">👁 Хариу</button><div class="ans hide" id="ansTxt">✔ '+p.a+'</div>';
+    $('ansBtn').onclick=()=>$('ansTxt').classList.toggle('hide')};
+  box.appendChild(b)});
+  const n=document.createElement('div');n.className='def';n.style.fontSize='17px';n.innerHTML='🗣️ Багш эхийг <b>сурах бичгээс</b> уншина. Слайд дээр зөвхөн товч агуулга.';box.appendChild(n)})();
+
+/* ================= 4. Clues ================= */
+const CLUES=[
+ {ic:'👦',who:'Котька',src:'2-р хэсэг · ээжтэйгээ ярихдаа',t:'Ээж нь «Хэн зөвшөөрсөн бэ?» гэхэд Котька: Павлик авч болдог юм бол би яагаад авч болохгүй гэж — гэж хариулав.',o:['Бусдыг бодолгүй дуурайдаг','Зоригтой, шийдэмгий','Бусдад тусархуу'],a:0,w:'Тэр өөрөө бодолгүйгээр найзынхаа хийснийг давтсан.'},
+ {ic:'👦',who:'Котька',src:'2-р хэсэг · ээжтэйгээ ярихдаа',t:'Ээж нь хэмхийг буцааж аваач гэхэд Котька: тэгвэл хаячихъя гэж санал болгов.',o:['Буруугаа засах хүсэлтэй','Хариуцлагаас зайлсхийдэг','Хэмнэлттэй, гамтай'],a:1,w:'Хаячихвал асуудал алга болно гэж бодсон — хариуцлага хүлээхийг хүсээгүй.'},
+ {ic:'👦',who:'Котька',src:'2-р хэсэг · сахиулын тухай',t:'Сахиул өвгөн хөгшин болохоор биднийг гүйцэхгүй гэж Котька ээждээ ярьсан.',o:['Хийснээ буруу гэж ойлгоогүй','Өвгөнийг хүндэлдэг','Хурдан гүйдэг'],a:0,w:'Зугтсанаа ичихгүй, харин сайрхаж ярьж байна.'},
+ {ic:'👦',who:'Котька',src:'2-р хэсэг · гарахын өмнө',t:'Харанхуйд ганцаараа явахаас айгаад Котька уйлж, ээжийгээ хамт яваач гэж гуйв.',o:['Зоригтой','Айдастай, аймхай','Уурламтгай'],a:1,w:'Хэмх авахдаа айгаагүй мөртлөө буцааж өгөхөөс айж байна.'},
+ {ic:'💭',who:'Котькагийн бодол',src:'3-р хэсэг · харанхуй гудамжинд',t:'Хэмхээ шуудуу руу хаяад «өгчихлөө» гэж хэлье гэж бодсон ч, өвгөн миний буруугаас болж хэрэгт орно гэж бодоод больжээ.',o:['Худалч хэвээрээ','Бусдын тухай бодож эхэлсэн','Залхуу'],a:1,w:'Энэ бол өөрчлөлтийн эхлэл — тэр өвгөнийг бодсон!'},
+ {ic:'👦',who:'Котька',src:'4-р хэсэг · өвгөнтэй',t:'Нэг хэмх дутуу байна гэдгийг Котька өөрөө хэлж, нэгийг нь идчихсэнээ хүлээв.',o:['Үнэнч, шударга болсон','Нуугдмал','Шуналтай'],a:0,w:'Нууж болох байсан ч үнэнээ хэлсэн.'},
+ {ic:'👦',who:'Котька',src:'4-р хэсэг · буцах замдаа',t:'Гэр лүүгээ гүйж явснаа эргэж зогсоод: идсэн хэмхийг минь хулгай гэж үзэх үү? гэж асуув.',o:['Тоглоомч, наргиантай','Хариуцлагатай, ухаарсан','Айдастай'],a:1,w:'Тэр «хулгайч» байхыг хүсэхгүй байна — буруугаа бүрэн засахыг хүссэн.'},
+ {ic:'🧒',who:'Павлик',src:'1-р хэсэг · гэр лүүгээ',t:'Гэртээ загнуулахаас айгаад Павлик өөрийн хэмхийг бүгдийг нь Котькад өгчихөв.',o:['Найздаа өгөөмөр','Хэргээс мултарч, бусдыг уруу татдаг','Үнэнч'],a:1,w:'Өгөөмөр мэт боловч үнэндээ бурууг Котькад үүрүүлсэн (х.23).'},
+ {ic:'👩',who:'Ээж',src:'2-р хэсэг',t:'«Хулгайч хүүтэй байснаас хүүгүй байсан нь дээр» гэж ээж нь хэлэв.',o:['Шударга, хүүдээ хатуу шаардлагатай','Хүүдээ хайргүй','Аймхай'],a:0,w:'Хүүгээ хайрладаг учраас шударга хүн болгохыг хүссэн (х.22, 2-р даалгавар).'}
+];
+const clueSolved=new Set();
+(()=>{const g=$('cgrid');CLUES.forEach((c,i)=>{const b=document.createElement('button');b.className='ctile';b.innerHTML='<span class="no">№'+(i+1)+'</span><span class="ic">'+c.ic+'</span><span class="nm">'+c.who+'</span>';b.onclick=()=>openClue(i);g.appendChild(b)})})();
+function openClue(i){const c=CLUES[i];const tiles=[...$('cgrid').children];tiles.forEach((t,j)=>t.classList.toggle('on',j===i));
+  const L=$('lensbox');L.innerHTML='<div class="who">🔍 СЭЖҮҮР №'+(i+1)+' · '+c.who.toUpperCase()+' · '+c.src+'</div><div class="clue">'+c.t+'</div><b>Энэ нь ямар зан чанарыг илтгэж байна вэ?</b><div class="opts" style="margin-top:6px"></div><div class="fb" id="clueFb"></div>';
+  const o=L.querySelector('.opts');c.o.forEach((txt,k)=>{const b=document.createElement('button');b.className='opt';b.textContent=txt;
+    if(clueSolved.has(i)&&k===c.a)b.classList.add('ok');
+    b.onclick=()=>{if(k===c.a){b.classList.add('ok');setFb('clueFb',true,'✔ Зөв! '+c.w);if(!clueSolved.has(i)){clueSolved.add(i);tiles[i].classList.add('solved');$('clueCnt').textContent=clueSolved.size+'/'+CLUES.length;confetti(25);if(clueSolved.size===CLUES.length)solve(1)}}
+      else{b.classList.add('no');bump(b);setFb('clueFb',false,'✘ Сэжүүрийг дахин уншаад бодоорой: баатар юу гэж хэлсэн, юу хийсэн бэ?')}};
+    o.appendChild(b)});
+  if(clueSolved.has(i))setFb('clueFb',true,'✔ '+c.w)}
+
+/* ================= 5. Evidence board ================= */
+const PAIRS=[
+ ['Найзыгаа бодолгүй дуурайдаг','Өөрөө бодож шийддэг болсон'],
+ ['Хэмх авснаа хулгай гэж ойлгоогүй','Буруугаа ухаарч, засч залруулсан'],
+ ['Хэмхээ хаяж, худлаа хэлэх гэж бодсон','Идсэнээ хүртэл үнэнээр хэлсэн'],
+ ['Айж, уйлж явсан','Сэтгэл хангалуун, тайван харьсан']
+];
+let selCard=null;
+function buildBoard(){const pool=$('pool');pool.innerHTML='';document.querySelectorAll('.bcol .slots').forEach(s=>s.innerHTML='');$('boardAns').classList.add('hide');selCard=null;
+  const cards=[];PAIRS.forEach((p,i)=>{cards.push({t:p[0],side:'a',pair:i});cards.push({t:p[1],side:'b',pair:i})});
+  shuffle(cards).forEach(c=>{const d=document.createElement('div');d.className='ecard';d.textContent=c.t;d.dataset.side=c.side;d.dataset.pair=c.pair;d.draggable=true;d.id='ec'+c.pair+c.side;
+    d.addEventListener('dragstart',e=>{if(d.classList.contains('ok')){e.preventDefault();return}try{e.dataTransfer.setData('text/plain',d.id)}catch(err){}selCard=d});
+    d.addEventListener('click',()=>{if(d.classList.contains('ok'))return;document.querySelectorAll('.ecard.sel').forEach(x=>x.classList.remove('sel'));selCard=d;d.classList.add('sel');document.querySelectorAll('.bcol').forEach(c=>c.classList.add('target'))});
+    pool.appendChild(d)});
+  drawStrings();setFb('boardFb',null,'👆 Картыг чирж, эсвэл дараад баганаа сонгоорой.')}
+function placeCard(card,col){document.querySelectorAll('.bcol').forEach(c=>c.classList.remove('target','over'));if(!card||card.classList.contains('ok'))return;card.classList.remove('sel');
+  if(card.dataset.side===col.dataset.side){card.classList.add('ok');card.draggable=false;col.querySelector('.slots').appendChild(card);
+    const pr=PAIRS[+card.dataset.pair];const other=$('ec'+card.dataset.pair+(card.dataset.side==='a'?'b':'a'));
+    if(other&&other.classList.contains('ok')){setFb('boardFb',true,'🧵 Утас татагдлаа! «'+pr[0]+'» → «'+pr[1]+'»');confetti(25)}
+    else setFb('boardFb',true,'✔ Зөв! Одоо түүний эсрэг хосыг ол.');
+    drawStrings();
+    if(document.querySelectorAll('.ecard.ok').length===PAIRS.length*2){setFb('boardFb',true,'🎉 Бүх нотлох баримт байрандаа! Котька үнэхээр өөрчлөгджээ.');$('boardAns').classList.remove('hide');solve(2)}}
+  else{bump(card);setFb('boardFb',false,'✘ Котька энэ зан чанарыг зохиолын '+(col.dataset.side==='a'?'эхэнд':'төгсгөлд')+' гаргасан уу? Дахин бод.')}
+  selCard=null}
+document.querySelectorAll('.bcol').forEach(col=>{
+  col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('over')});
+  col.addEventListener('dragleave',()=>col.classList.remove('over'));
+  col.addEventListener('drop',e=>{e.preventDefault();let id='';try{id=e.dataTransfer.getData('text/plain')}catch(err){}placeCard(id?$(id):selCard,col)});
+  col.addEventListener('click',e=>{if(e.target.closest('.ecard'))return;if(selCard)placeCard(selCard,col)})});
+function drawStrings(){const svg=$('strings'),bd=$('board');if(!svg||!bd)return;const R=bd.getBoundingClientRect();if(!R.width)return;svg.setAttribute('viewBox','0 0 '+R.width+' '+R.height);
+  let h='';PAIRS.forEach((p,i)=>{const a=$('ec'+i+'a'),b=$('ec'+i+'b');if(!a||!b||!a.classList.contains('ok')||!b.classList.contains('ok'))return;
+    const ra=a.getBoundingClientRect(),rb=b.getBoundingClientRect();const x1=ra.right-R.left-6,y1=ra.top-R.top+ra.height/2,x2=rb.left-R.left+6,y2=rb.top-R.top+rb.height/2;
+    const mx=(x1+x2)/2,my=Math.max(y1,y2)+28;
+    h+='<path d="M'+x1+' '+y1+' Q'+mx+' '+my+' '+x2+' '+y2+'" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="4" transform="translate(2,3)"/>';
+    h+='<path d="M'+x1+' '+y1+' Q'+mx+' '+my+' '+x2+' '+y2+'" fill="none" stroke="#c0221a" stroke-width="3.5" stroke-linecap="round"/>';
+    h+='<circle cx="'+x1+'" cy="'+y1+'" r="7" fill="#9d1d16" stroke="#fff" stroke-width="1.5"/><circle cx="'+x2+'" cy="'+y2+'" r="7" fill="#9d1d16" stroke="#fff" stroke-width="1.5"/>'});
+  svg.innerHTML=h}
+$('boardReset').onclick=buildBoard;
+$('boardConc').onclick=()=>$('boardAns').classList.toggle('hide');
+buildBoard();
+
+/* ================= 6. Interrogation ================= */
+const QS=[
+ {q:'Ээж нь яагаад хэмхийг хаяж болохгүй гэж хэлсэн бэ?',p:'х.22, 2-р даалгавар (1)',h:'Хэмх бусдын хөдөлмөр. Тариагүй, ургуулаагүй хүнд түүнийг хаях эрх байхгүй.'},
+ {q:'Котька хэмхээ хаячихсан бол буруу, зөвөө ойлгох байсан уу?',p:'х.22, 3-р даалгавар (1)',h:'Үгүй. Хаявал бурууг нууна; буцааж өгснөөр л хийснээ ойлгосон.'},
+ {q:'«Чи миний хүү биш» хэсгийн ярианаас Котькаг ямар хүүхэд гэж дүгнэх вэ?',p:'х.23, 1-р даалгавар (2)',h:'Дуурайгч, хариуцлагаас зайлсхийдэг, айдастай. Жишээ: «Павлик авч болдог бол…», «хаячихъя».'},
+ {q:'Котька хэмхээ шуудуу руу шидсэн бол зохиолч цааш нь юу гэж бичих байсан бэ?',p:'х.23, 1-р даалгавар (3)',h:'Котька худал хэлж, сэтгэл нь тайвшрахгүй; өвгөн буруутан болох байсан.'},
+ {q:'Яагаад 2-р хэсгийг «Чи миний хүү биш» гэж нэрлэсэн бэ?',p:'х.23, 1-р даалгавар (5)',h:'Ээж нь хулгай хийсэн хүүтэй байхыг хүсээгүй — шударга байхыг хатуу шаардсан.'},
+ {q:'Найзаа муу зүйлд дуурайвал ямар хор уршигтай вэ?',p:'х.23, 1-р даалгавар (6)',h:'Өөрөө бодохгүй, бусдын бурууг үүрнэ. Өвгөн: өөрөө мэдэх хэрэгтэй.'},
+ {q:'Павлик, Котька хоёрын хэн нь шударга хүн болж төлөвших вэ? Яагаад?',p:'х.23, 1-р даалгавар (8)',h:'Котька — буруугаа засаж, үнэнээ хэлсэн. Павлик хэргээс мултарсан.'},
+ {q:'Котька яагаад идсэн хэмхийг минь хулгай гэж үзэх үү? гэж асуусан бэ?',p:'х.22, 3-р даалгавар (3)',h:'Тэр дахиж хулгайч байхыг хүсээгүй — бүрэн цэвэр ухамсартай болохыг хүссэн.'}
+];
+let curQ=-1;
+(()=>{const l=$('qlist');QS.forEach((q,i)=>{const b=document.createElement('button');b.className='qbtn';b.textContent='№'+(i+1);b.onclick=()=>showQ(i);l.appendChild(b)})})();
+function showQ(i){curQ=i;const b=[...$('qlist').children];b.forEach((x,j)=>x.classList.toggle('on',j===i));$('qq').textContent='❓ '+QS[i].q;$('qpg').textContent='📖 '+QS[i].p;$('qHint').textContent='💡 '+QS[i].h;$('qHint').classList.add('hide');$('qHintBtn').classList.remove('hide');$('qDone').classList.remove('hide');bump($('spot'))}
+$('qRand').onclick=()=>{const left=QS.map((q,i)=>i).filter(i=>!$('qlist').children[i].classList.contains('done')&&i!==curQ);const pool=left.length?left:QS.map((q,i)=>i);showQ(pool[Math.floor(Math.random()*pool.length)])};
+$('qHintBtn').onclick=()=>$('qHint').classList.toggle('hide');
+$('qDone').onclick=()=>{if(curQ<0)return;$('qlist').children[curQ].classList.add('done');confetti(20)};
+
+/* ================= 7. Case 2 ================= */
+const TL=[
+ {t:'1. Цэрэн',s:'Шувуунд маш их хайртай. Нүүдлийн шувууд буцахад гуниглаж, тэдний амьдралыг сайн мэддэг.',ok:['😊']},
+ {t:'2. Хоёр бүргэд',s:'Голын эргийн улиасан дээрх бүргэдийн үүрэнд ангаахай байхыг хараад баярлав.',ok:['😊']},
+ {t:'3. Харамссан нь',s:'Бүргэд хунгийн дэгдээхэйг шүүрч авав. Юу ч хийж чадаагүй Цэрэн уйлж, бүргэдээс өшөө авахаар шийдэв.',ok:['😢','😠']},
+ {t:'4. Ухаарсан нь',s:'Бүргэдийн үүр рүү буудав. Шархадсан ангаахайг хараад гэмээ ухаарч, тэврээд гэр лүүгээ гүйв.',ok:['😔']}
+];
+const FE=['😊','😢','😠','😔'];
+const CMP=[
+ {t:'Буруу зүйл хийсэн',a:'both'},
+ {t:'Найзыгаа дуурайж буруу юм хийсэн',a:'k'},
+ {t:'Уурандаа өшөө авахаар шийдсэн',a:'c'},
+ {t:'Ээжийнхээ шаардлагаар буруугаа засахаар явсан',a:'k'},
+ {t:'Хохироосон амьтнаа өрөвдөж, тэвэрч гүйсэн',a:'c'},
+ {t:'Төгсгөлд нь буруугаа ухаарсан',a:'both'}
+];
+const c2={tl:new Set(),cmp:new Set()};
+function c2check(){if(c2.tl.size===TL.length&&c2.cmp.size===CMP.length){setFb('c2Fb',true,'🎉 Хоёр хэргийн гол санаа нэг — <b>ухаарал</b>!');solve(3)}}
+(()=>{const box=$('tl');TL.forEach((r,i)=>{const d=document.createElement('div');d.className='tlrow';d.innerHTML='<div class="t">'+r.t+'<small>'+r.s+'</small></div><div class="feel"></div>';
+  const f=d.querySelector('.feel');FE.forEach(e=>{const b=document.createElement('button');b.textContent=e;b.title='Сэтгэл хөдлөл';
+    b.onclick=()=>{if(r.ok.includes(e)){f.querySelectorAll('button').forEach(x=>x.classList.remove('no'));b.classList.add('ok');d.classList.add('ok');c2.tl.add(i);confetti(15);c2check()}else{b.classList.add('no');bump(b)}};f.appendChild(b)});
+  box.appendChild(d)});
+  const cm=$('cmp');const L={k:'👦 Котька',c:'🧒 Цэрэн',both:'🤝 Хоёулаа'};
+  CMP.forEach((r,i)=>{const d=document.createElement('div');d.className='cmprow';d.innerHTML='<span class="t">'+r.t+'</span><span class="bs"></span>';const bs=d.querySelector('.bs');
+    ['k','c','both'].forEach(k=>{const b=document.createElement('button');b.textContent=L[k];
+      b.onclick=()=>{if(k===r.a){bs.querySelectorAll('button').forEach(x=>x.classList.remove('no'));b.classList.add('ok');d.classList.add('ok');c2.cmp.add(i);setFb('c2Fb',true,'✔ Зөв!');c2check()}else{b.classList.add('no');bump(d);setFb('c2Fb',false,'✘ Хоёр зохиолыг дахин санаарай.')}};bs.appendChild(b)});
+    cm.appendChild(d)})})();
+
+/* ================= 8. Report / summary ================= */
+const SQ=['Хэн?','Хаана?','Асуудал юу вэ?','Гол үйл явдал','Төгсгөл'];
+const STORIES={
+ k:{name:'Котька',ph:['Гол баатар хэн бэ?','Хаана болсон бэ?','Юунаас болж асуудал гарсан бэ?','Юу болсон бэ?','Хэрхэн дууссан бэ? Баатар яаж өөрчлөгдсөн бэ?'],
+    keys:['Котька, Павлик, ээж, сахиул өвгөн','тосгон, хамтралын ногооны газар','найзаа дуурайж зөвшөөрөлгүй хэмх авсан','ээж нь буцааж өгүүлсэн; айсан ч ганцаараа очсон','үнэнээ хэлсэн; өвгөн бэлэг гэж үзсэн; ухаарсан']},
+ c:{name:'Цэрэн',ph:['Гол баатар хэн бэ?','Хаана болсон бэ?','Юунаас болж асуудал гарсан бэ?','Юу болсон бэ?','Хэрхэн дууссан бэ? Баатар яаж өөрчлөгдсөн бэ?'],
+    keys:['Цэрэн — шувуунд хайртай хүү','хээр тал, нуур, голын эрэг','бүргэд хунгийн дэгдээхэйг шүүрч авсан','өшөө авах гэж бүргэдийн ангаахайг буудсан','гэмээ ухаарч, ангаахайг тэврээд гэр лүүгээ гүйсэн']}
+};
+let story=store.get('mk2_story')||'c';if(!STORIES[story])story='c';
+const MINW=25,MAXW=80,SCALE=120;
+(()=>{const m=$('smap');SQ.forEach((q,i)=>{const l=document.createElement('label');l.innerHTML='<span>'+q+'</span><textarea id="sm'+i+'"></textarea>';m.appendChild(l);
+  l.querySelector('textarea').addEventListener('input',e=>{store.set('mk2_sm_'+story+'_'+i,e.target.value);buildSum()})});
+  $('zone').style.left=(MINW/SCALE*100)+'%';$('zone').style.width=((MAXW-MINW)/SCALE*100)+'%'})();
+function loadStory(s){story=s;store.set('mk2_story',s);document.querySelectorAll('[data-story]').forEach(b=>b.classList.toggle('on',b.dataset.story===s));
+  SQ.forEach((q,i)=>{const t=$('sm'+i);t.value=store.get('mk2_sm_'+s+'_'+i)||'';t.placeholder=STORIES[s].ph[i]});
+  $('keys').innerHTML='<b>🔑 Гол үгс:</b> '+STORIES[s].keys.map((k,i)=>'<b>'+SQ[i]+'</b> '+k).join(' · ');
+  $('sumChecks').innerHTML='';setFb('sumFb',null,'');buildSum()}
+document.querySelectorAll('[data-story]').forEach(b=>b.onclick=()=>loadStory(b.dataset.story));
+$('keysBtn').onclick=()=>$('keys').classList.toggle('hide');
+function sentences(){return SQ.map((q,i)=>$('sm'+i).value.trim().replace(/\s+/g,' ')).filter(Boolean).map(t=>{t=t.charAt(0).toUpperCase()+t.slice(1);return /[.!?…]$/.test(t)?t:t+'.'})}
+function words(t){return t.split(/\s+/).filter(w=>/[A-Za-zА-Яа-яЁёӨөҮү0-9]/.test(w)).length}
+function buildSum(){const txt=sentences().join(' ');$('sumOut').textContent=txt;const n=words(txt);$('wcN').textContent=n;
+  $('fill').style.width=Math.min(100,n/SCALE*100)+'%';$('fill').style.background=n<MINW?'#a8824a':n<=MAXW?'#2e7d32':'#b3261e';return n}
+$('sumChk').onclick=()=>{const n=buildSum(),txt=$('sumOut').textContent,S=STORIES[story];
+  const filled=SQ.every((q,i)=>$('sm'+i).value.trim().length>0);
+  const hasName=txt.toLowerCase().includes(S.name.toLowerCase().slice(0,5));
+  const C=[[filled,'5 хайрцаг бүгд бөглөгдсөн'],[hasName,'Гол баатрын нэр ('+S.name+') орсон'],[n>=MINW,'Гол санаа дутуу биш ('+MINW+'+ үг)'],[n<=MAXW,'Илүүдэл үггүй, товч ('+MAXW+'-аас бага үг)']];
+  $('sumChecks').innerHTML=C.map(c=>'<li class="'+(c[0]?'ok':'no')+'">'+(c[0]?'✔ ':'✘ ')+c[1]+'</li>').join('');
+  if(C.every(c=>c[0])){setFb('sumFb',true,'🎉 Тайлан товч бөгөөд бүрэн байна!');solve(4)}
+  else if(n>MAXW)setFb('sumFb',false,'✂️ Хэт урт байна — давтсан үг, жижиг зүйлсийг хас.');
+  else if(n<MINW)setFb('sumFb',false,'➕ Хэт богино — гол үйл явдлаа нэмж бич.');
+  else setFb('sumFb',false,'🔍 Улаан тэмдэгтэй шалгуурыг засаарай.')};
+loadStory(story);
+
+/* ================= 9. Lab ================= */
+const AW=[
+ {w:'торх',n:1,m:'тос, сүү хийдэг сав'},{w:'торох',n:0,m:'тээглэх, саатах'},
+ {w:'хонх',n:1,m:'дуугардаг эд'},{w:'хонох',n:0,m:'шөнийг өнгөрөөх'},
+ {w:'харх',n:1,m:'мэрэгч амьтан'},{w:'харах',n:0,m:'нүдээрээ үзэх'},
+ {w:'шарх',n:1,m:'гэмтсэн, шархадсан газар'},{w:'шарах',n:0,m:'галд болгох'},
+ {w:'төрх',n:1,m:'гадаад байдал, дүр'},{w:'төрөх',n:0,m:'мэндлэх'}
+];
+let aQ=shuffle(AW),aI=0,aS=0,aLock=false;
+function aShow(){if(aI>=aQ.length){$('aWord').textContent='🏆 '+aS+'/'+aQ.length;setFb('aFb',true,'Балархай эгшиг утгыг өөрчилдөг! <button class="btn ghost sm" id="aAgain">↺ Дахин</button>');$('aAgain').onclick=()=>{aQ=shuffle(AW);aI=0;aS=0;$('aScore').textContent='0/10';setFb('aFb',null,'');aShow()};labDone();return}
+  $('aWord').textContent=aQ[aI].w;aLock=false}
+function aAns(isN){if(aI>=aQ.length||aLock)return;const it=aQ[aI];
+  if((isN?1:0)===it.n){aLock=true;aS++;$('aScore').textContent=aS+'/'+aQ.length;setFb('aFb',true,'✔ <b>'+it.w+'</b> — '+it.m+' ('+(it.n?'Юу?':'Яах?')+')');setTimeout(()=>{aI++;aShow()},1300)}
+  else{bump($('aWord'));setFb('aFb',false,'✘ «'+it.w+'» гэдэгт «'+(isN?'Юу?':'Яах?')+'» гэж асууж болох уу? Дахин бод.')}}
+$('aN').onclick=()=>aAns(true);$('aV').onclick=()=>aAns(false);aShow();
+const SP=[
+ {w:'бодол + ыг',ok:'бодлыг',bad:'бодолыг',why:'Балархай «о» үүрэггүй болж гээгдэнэ (х.28).'},
+ {w:'онол + ын',ok:'онолын',bad:'онлын',why:'«о» нь «н»-ийг ялгадаг тул гээгдэхгүй (х.30).'},
+ {w:'шагнал + аа',ok:'шагналаа',bad:'шагнлаа',why:'«а» нь «н»-ийг ялгадаг тул гээгдэхгүй (х.30).'},
+ {w:'хотгор + оос',ok:'хотгороос',bad:'хотгроос',why:'«о» нь «г»-г ялгадаг тул гээгдэхгүй (х.30).'},
+ {w:'ажил + ыг',ok:'ажлыг',bad:'ажилыг',why:'Балархай «и» үүрэггүй болж гээгдэнэ.'},
+ {w:'торгон + ы',ok:'торгоны',bad:'торгны',why:'«о» нь «г»-г ялгадаг тул гээгдэхгүй (х.30).'}
+];
+const spDone=new Set();
+(()=>{const box=$('spell');SP.forEach((s,i)=>{const r=document.createElement('div');r.className='spell';r.innerHTML='<span class="w">'+s.w+'</span>';
+  const opts=Math.random()<.5?[s.ok,s.bad]:[s.bad,s.ok];opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;
+    b.onclick=()=>{if(spDone.has(i))return;if(o===s.ok){b.classList.add('ok');spDone.add(i);$('bScore').textContent=spDone.size+'/'+SP.length;setFb('bFb',true,'✔ '+s.ok+' — '+s.why);labDone()}else{b.classList.add('no');bump(b);setFb('bFb',false,'✘ Дүрмийг бод: эгшиг «н», «г»-г ялгаж байна уу?')}};r.appendChild(b)});
+  box.appendChild(r)})})();
+function labDone(){if(aI>=aQ.length&&spDone.size===SP.length)solve(5)}
+
+/* ================= 10. Verdict ================= */
+const PROV=[
+ {t:'а. Дороо суурьгүй, дотроо бодолгүй.',ok:false,w:'Котька эхэндээ бодолгүй байсан ч зохиолын гол санаа нь өөр.'},
+ {t:'б. Ээжийн сургаал эрдэнэ.',ok:true,w:'✔ Тийм! Ээжийн хатуу сургаал Котькаг шударга хүн болгосон.'},
+ {t:'в. Олон хүн сайнтай муутай, ойн мод урттай богинотой.',ok:false,w:'Энэ нь хүмүүс янз бүр гэсэн санаа — Котькагийн өөрчлөлтийг илэрхийлэхгүй.'},
+ {t:'г. Хэрээ мянган жил болсон ч хар хэвээрээ.',ok:false,w:'Энэ нь «хүн өөрчлөгддөггүй» гэсэн утгатай. Харин Котька өөрчлөгдсөн!'}
+];
+(()=>{const box=$('prov');PROV.forEach(p=>{const b=document.createElement('button');b.textContent=p.t;
+  b.onclick=()=>{if(p.ok){b.classList.add('ok');setFb('provFb',true,p.w);confetti(40)}else{b.classList.add('no');bump(b);setFb('provFb',false,'✘ '+p.w)}};box.appendChild(b)})})();
+(()=>{const b=[...document.querySelectorAll('#stars3 button')];const set=n=>{b.forEach((x,i)=>x.classList.toggle('on',i<n));store.set('mk2_stars',n)};b.forEach((x,i)=>x.onclick=()=>{set(i+1);if(i===2)confetti(60)});set(+(store.get('mk2_stars')||0))})();
+$('closeCase').onclick=()=>{const s=$('closeStamp');s.classList.remove('show');void s.offsetWidth;s.classList.add('show');confetti(140)};
+
+/* ================= Confetti (paper scraps) ================= */
+const cf=$('confetti'),cfx=cf.getContext('2d');let parts=[],cRun=false;
+function confetti(n){cf.width=innerWidth;cf.height=innerHeight;const cols=['#b3261e','#f3e3b8','#241811','#e5b54e','#fbf5e4','#a8824a'];
+  for(let i=0;i<n;i++)parts.push({x:innerWidth/2+rnd(-180,180),y:innerHeight*.45,vx:rnd(-7,7),vy:-rnd(4,17),w:rnd(8,16),h:rnd(5,10),c:cols[i%6],r:rnd(0,6),life:120});
+  if(!cRun){cRun=true;requestAnimationFrame(cStep)}}
+function cStep(){cfx.clearRect(0,0,cf.width,cf.height);parts.forEach(p=>{p.vy+=.4;p.x+=p.vx;p.y+=p.vy;p.r+=.13;p.life--;cfx.save();cfx.translate(p.x,p.y);cfx.rotate(p.r);cfx.fillStyle=p.c;cfx.strokeStyle='rgba(36,24,17,.5)';cfx.lineWidth=1;cfx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cfx.strokeRect(-p.w/2,-p.h/2,p.w,p.h);cfx.restore()});
+  parts=parts.filter(p=>p.life>0&&p.y<cf.height+20);if(parts.length)requestAnimationFrame(cStep);else{cRun=false;cfx.clearRect(0,0,cf.width,cf.height)}}
+
+go(0);
+</script>
+</body>
+</html>
